@@ -32,7 +32,17 @@ gcloud services enable \
   run.googleapis.com \
   cloudbuild.googleapis.com \
   firestore.googleapis.com \
-  artifactregistry.googleapis.com
+  artifactregistry.googleapis.com \
+  iam.googleapis.com
+
+# Fix Storage Object Viewer permission for Compute Service Account
+PROJECT_NUMBER=$(gcloud projects describe "$PROJECT_ID" --format='value(projectNumber)' 2>/dev/null || echo "")
+if [ -n "$PROJECT_NUMBER" ]; then
+  echo "Granting Cloud Storage permissions to Compute Service Account (${PROJECT_NUMBER}-compute@developer.gserviceaccount.com)..."
+  gcloud projects add-iam-policy-binding "$PROJECT_ID" \
+    --member="serviceAccount:${PROJECT_NUMBER}-compute@developer.gserviceaccount.com" \
+    --role="roles/storage.admin" --quiet 2>/dev/null || true
+fi
 
 # Check for GEMINI_API_KEY
 if [ -z "$GEMINI_API_KEY" ]; then
