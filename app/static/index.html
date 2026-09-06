@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JobMentor AI - AI Document Assistant & Career Acceleration Platform</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22%20width=%22100%22%20height=%22100%22><text y=%22.9em%22 font-size=%2290%22>🚀</text></svg>">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              400: '#60a5fa',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              gblue: '#4285F4',
+              gred: '#EA4335',
+              gyellow: '#FBBC05',
+              ggreen: '#34A853'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Marked for Markdown Rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <!-- Custom Styling -->
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body class="min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-blue-600 selection:text-white">
+
+  <!-- TOP APP HEADER -->
+  <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur-md sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      
+      <!-- Brand Logo -->
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/25">
+          <i data-lucide="sparkles" class="w-5 h-5 text-white"></i>
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <span class="text-xl font-extrabold tracking-tight accent-gradient-text">JobMentor AI</span>
+            <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-blue-900/60 text-blue-300 border border-blue-700/50">Cloud Run AI</span>
+          </div>
+          <p class="text-xs text-slate-400 hidden sm:block">Intelligent Document Assistant & ATS Career Accelerator</p>
+        </div>
+      </div>
+
+      <!-- Cloud Run & System Status Badges -->
+      <div class="flex items-center space-x-3 text-xs">
+        <div class="hidden md:flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700/70">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 pulse-indicator"></span>
+          <span class="text-slate-300 font-mono">dev-tutorial=cloud-run-ai-challenge</span>
+        </div>
+        
+        <div id="gemini-status-badge" class="flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-blue-950/80 text-blue-300 border border-blue-800/60">
+          <i data-lucide="cpu" class="w-3.5 h-3.5"></i>
+          <span>Gemini 2.5</span>
+        </div>
+
+        <div id="firestore-status-badge" class="hidden sm:flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-amber-950/80 text-amber-300 border border-amber-800/60">
+          <i data-lucide="database" class="w-3.5 h-3.5"></i>
+          <span>Firestore</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- NAVIGATION TABS -->
+  <nav class="bg-slate-900 border-b border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex space-x-1 sm:space-x-4 overflow-x-auto py-2">
+      <button onclick="switchTab('tab-chat')" id="btn-tab-chat" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold flex items-center space-x-2 transition bg-blue-600 text-white shadow-md shadow-blue-500/20">
+        <i data-lucide="file-text" class="w-4 h-4"></i>
+        <span>Chat with PDF</span>
+      </button>
+
+      <button onclick="switchTab('tab-ats')" id="btn-tab-ats" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold flex items-center space-x-2 transition text-slate-400 hover:text-slate-200 hover:bg-slate-800/70">
+        <i data-lucide="target" class="w-4 h-4"></i>
+        <span>ATS Resume Matcher</span>
+      </button>
+
+      <button onclick="switchTab('tab-email')" id="btn-tab-email" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold flex items-center space-x-2 transition text-slate-400 hover:text-slate-200 hover:bg-slate-800/70">
+        <i data-lucide="mail" class="w-4 h-4"></i>
+        <span>Cold Email Studio</span>
+      </button>
+
+      <button onclick="switchTab('tab-vault')" id="btn-tab-vault" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold flex items-center space-x-2 transition text-slate-400 hover:text-slate-200 hover:bg-slate-800/70">
+        <i data-lucide="archive" class="w-4 h-4"></i>
+        <span>Firestore Vault</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- MAIN CONTAINER -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+    <!-- ================================================================= -->
+    <!-- TAB 1: CHAT WITH PDF -->
+    <!-- ================================================================= -->
+    <div id="tab-chat" class="tab-content grid grid-cols-1 lg:grid-cols-12 gap-6">
+      
+      <!-- Document Upload & Overview Panel (Col 4) -->
+      <div class="lg:col-span-4 space-y-6">
+        
+        <!-- Upload Card -->
+        <div class="glass-panel p-5 rounded-2xl">
+          <h2 class="text-base font-bold text-slate-100 flex items-center space-x-2 mb-3">
+            <i data-lucide="upload-cloud" class="w-5 h-5 text-blue-400"></i>
+            <span>Upload Document</span>
+          </h2>
+          <p class="text-xs text-slate-400 mb-4">
+            Upload your resume, research whitepaper, job description, or company profile in PDF.
+          </p>
+
+          <div id="drop-zone" class="border-2 border-dashed border-slate-700 hover:border-blue-500/80 rounded-xl p-6 text-center cursor-pointer transition bg-slate-900/50 hover:bg-blue-950/10 group">
+            <input type="file" id="pdf-file-input" accept="application/pdf" class="hidden" />
+            <div class="w-12 h-12 rounded-full bg-blue-900/30 text-blue-400 mx-auto flex items-center justify-center mb-3 group-hover:scale-110 transition">
+              <i data-lucide="file-up" class="w-6 h-6"></i>
+            </div>
+            <p class="text-xs font-semibold text-slate-200">Click or drag & drop PDF here</p>
+            <p class="text-[11px] text-slate-500 mt-1">PDF up to 15MB</p>
+          </div>
+
+          <!-- Upload Progress / Success Status -->
+          <div id="upload-status" class="mt-4 hidden text-xs p-3 rounded-lg bg-slate-800/80 border border-slate-700"></div>
+        </div>
+
+        <!-- Document Details Card -->
+        <div id="doc-meta-card" class="glass-panel p-5 rounded-2xl hidden space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold text-slate-200 flex items-center space-x-2">
+              <i data-lucide="file-check" class="w-4 h-4 text-emerald-400"></i>
+              <span id="active-doc-filename" class="truncate max-w-[200px]">document.pdf</span>
+            </h3>
+            <span id="active-doc-pages" class="text-xs bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full">0 pages</span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3 text-center">
+            <div class="p-2.5 rounded-xl bg-slate-800/50 border border-slate-700/50">
+              <div class="text-[10px] uppercase text-slate-400">Words</div>
+              <div id="active-doc-words" class="text-base font-bold text-slate-100">0</div>
+            </div>
+            <div class="p-2.5 rounded-xl bg-slate-800/50 border border-slate-700/50">
+              <div class="text-[10px] uppercase text-slate-400">Characters</div>
+              <div id="active-doc-chars" class="text-base font-bold text-slate-100">0</div>
+            </div>
+          </div>
+
+          <div>
+            <div class="text-xs font-medium text-slate-400 mb-1">Text Excerpt:</div>
+            <div id="active-doc-preview" class="text-xs text-slate-300 font-mono bg-slate-900/90 p-3 rounded-lg max-h-36 overflow-y-auto leading-relaxed border border-slate-800"></div>
+          </div>
+
+          <button onclick="useAsAtsResume()" class="w-full py-2 px-3 text-xs font-semibold rounded-lg bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-200 border border-indigo-500/40 flex items-center justify-center space-x-2 transition">
+            <i data-lucide="arrow-right-circle" class="w-4 h-4"></i>
+            <span>Load into ATS Matcher</span>
+          </button>
+        </div>
+
+        <!-- Sample Quick Load for Demo -->
+        <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800/80">
+          <div class="text-xs font-semibold text-slate-300 mb-2 flex items-center justify-between">
+            <span>🚀 Quick Demo Presets</span>
+            <span class="text-[10px] text-blue-400 font-mono">1-Click</span>
+          </div>
+          <button onclick="loadSampleResume()" class="w-full text-left p-2.5 rounded-lg bg-slate-800/60 hover:bg-slate-800 text-xs text-slate-200 flex items-center justify-between transition group">
+            <span class="truncate">Load Senior Cloud & AI Engineer Resume</span>
+            <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-500 group-hover:text-blue-400"></i>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Chat Conversation Timeline (Col 8) -->
+      <div class="lg:col-span-8 flex flex-col h-[750px] glass-panel rounded-2xl overflow-hidden">
+        
+        <!-- Chat Header -->
+        <div class="px-6 py-4 border-b border-slate-800 bg-slate-900/50 flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <div class="w-8 h-8 rounded-lg bg-blue-600/20 text-blue-400 flex items-center justify-center">
+              <i data-lucide="message-square-code" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <div class="text-sm font-bold text-slate-200">Grounded Document Q&A</div>
+              <div class="text-xs text-slate-400">Powered by Gemini with source verification</div>
+            </div>
+          </div>
+          <button onclick="clearChat()" class="text-xs text-slate-400 hover:text-slate-200 flex items-center space-x-1">
+            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+            <span>Reset Chat</span>
+          </button>
+        </div>
+
+        <!-- Message Stream Area -->
+        <div id="chat-messages" class="flex-1 p-6 overflow-y-auto space-y-4">
+          <!-- Initial Assistant Welcome Message -->
+          <div class="flex items-start space-x-3">
+            <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center flex-shrink-0 text-white shadow-md">
+              <i data-lucide="bot" class="w-4 h-4"></i>
+            </div>
+            <div class="max-w-2xl bg-slate-900/90 border border-slate-800 rounded-2xl p-4 text-xs sm:text-sm text-slate-200 space-y-2">
+              <p class="font-semibold text-blue-300">Welcome to JobMentor AI Document Assistant!</p>
+              <p class="text-slate-300">
+                Upload any PDF on the left, and ask me anything about its contents. I analyze resumes, technical proposals, research papers, and corporate specs with precision.
+              </p>
+              <div class="pt-2 text-xs text-slate-400">
+                💡 Try asking: <em>"What are the candidate's top technical accomplishments?"</em> or <em>"Summarize key qualifications."</em>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Suggested Follow-up Chips -->
+        <div id="followup-container" class="px-6 py-2 bg-slate-900/40 border-t border-slate-800/80 flex items-center space-x-2 overflow-x-auto hidden">
+          <span class="text-[11px] font-medium text-slate-400 flex-shrink-0">Suggestions:</span>
+          <div id="followup-chips" class="flex items-center space-x-2"></div>
+        </div>
+
+        <!-- Input Bar -->
+        <div class="p-4 border-t border-slate-800 bg-slate-900/80">
+          <form id="chat-form" onsubmit="handleChatSubmit(event)" class="flex items-center space-x-3">
+            <input 
+              type="text" 
+              id="chat-input" 
+              placeholder="Ask any question about the uploaded document..." 
+              class="flex-1 bg-slate-950 border border-slate-700/80 focus:border-blue-500 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition"
+            />
+            <button 
+              type="submit" 
+              id="chat-send-btn"
+              class="px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm flex items-center space-x-2 shadow-lg shadow-blue-600/25 transition disabled:opacity-50"
+            >
+              <span>Ask</span>
+              <i data-lucide="send" class="w-4 h-4"></i>
+            </button>
+          </form>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ================================================================= -->
+    <!-- TAB 2: ATS RESUME MATCHER -->
+    <!-- ================================================================= -->
+    <div id="tab-ats" class="tab-content hidden space-y-6">
+      
+      <!-- Top Input Section (Side by Side) -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- Resume Source Column -->
+        <div class="glass-panel p-5 rounded-2xl flex flex-col space-y-3">
+          <div class="flex items-center justify-between">
+            <label class="text-sm font-bold text-slate-100 flex items-center space-x-2">
+              <i data-lucide="file-user" class="w-4 h-4 text-blue-400"></i>
+              <span>Candidate Resume</span>
+            </label>
+            <button onclick="loadSampleResumeIntoAts()" class="text-xs text-blue-400 hover:underline">
+              Insert Sample Resume
+            </button>
+          </div>
+          <p class="text-xs text-slate-400">Paste candidate resume text or select an uploaded PDF from Tab 1.</p>
+          <textarea 
+            id="ats-resume-text" 
+            rows="10" 
+            placeholder="Paste complete resume text here (experience, skills, education, projects)..." 
+            class="w-full flex-1 bg-slate-950 border border-slate-700/80 focus:border-blue-500 rounded-xl p-3.5 text-xs sm:text-sm text-slate-200 placeholder-slate-500 focus:outline-none font-mono leading-relaxed"
+          ></textarea>
+        </div>
+
+        <!-- Job Description Column -->
+        <div class="glass-panel p-5 rounded-2xl flex flex-col space-y-3">
+          <div class="flex items-center justify-between">
+            <label class="text-sm font-bold text-slate-100 flex items-center space-x-2">
+              <i data-lucide="briefcase" class="w-4 h-4 text-emerald-400"></i>
+              <span>Target Job Description (JD)</span>
+            </label>
+            <button onclick="loadSampleJobDescription()" class="text-xs text-emerald-400 hover:underline">
+              Insert Sample Cloud JD
+            </button>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <input type="text" id="ats-job-title" placeholder="Job Title (e.g. Senior Cloud Engineer)" class="bg-slate-950 border border-slate-700/80 rounded-lg px-3 py-1.5 text-xs text-slate-200" />
+            <input type="text" id="ats-company" placeholder="Company Name (e.g. TechCorp)" class="bg-slate-950 border border-slate-700/80 rounded-lg px-3 py-1.5 text-xs text-slate-200" />
+          </div>
+          <textarea 
+            id="ats-jd-text" 
+            rows="8" 
+            placeholder="Paste target job description and requirements here..." 
+            class="w-full flex-1 bg-slate-950 border border-slate-700/80 focus:border-blue-500 rounded-xl p-3.5 text-xs sm:text-sm text-slate-200 placeholder-slate-500 focus:outline-none font-mono leading-relaxed"
+          ></textarea>
+
+          <button 
+            onclick="runAtsEvaluation()" 
+            id="btn-run-ats"
+            class="w-full py-3 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold text-sm flex items-center justify-center space-x-2 shadow-lg shadow-indigo-600/30 transition"
+          >
+            <i data-lucide="zap" class="w-4 h-4"></i>
+            <span>Evaluate ATS Compatibility with Gemini</span>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- ATS Results Dashboard -->
+      <div id="ats-results-container" class="glass-panel p-6 rounded-2xl hidden space-y-8">
+        
+        <!-- Score Overview Header -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+          
+          <!-- Circular Gauge (Col 4) -->
+          <div class="md:col-span-4 flex flex-col items-center justify-center p-4 bg-slate-900/80 rounded-2xl border border-slate-800">
+            <div class="relative w-36 h-36 flex items-center justify-center">
+              <svg class="w-36 h-36" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="42" stroke="#1e293b" stroke-width="8" fill="none"></circle>
+                <circle id="gauge-circle-elem" class="gauge-circle" cx="50" cy="50" r="42" stroke="#3b82f6" stroke-width="8" stroke-dasharray="264" stroke-dashoffset="264" stroke-linecap="round" fill="none"></circle>
+              </svg>
+              <div class="absolute inset-0 flex flex-col items-center justify-center">
+                <span id="ats-score-number" class="text-3xl font-extrabold text-white">0%</span>
+                <span class="text-[10px] uppercase font-bold text-slate-400">Match Score</span>
+              </div>
+            </div>
+            <div id="ats-rating-badge" class="mt-3 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-blue-900/60 text-blue-300 border border-blue-700/50">
+              Analyzing
+            </div>
+          </div>
+
+          <!-- Sub-scores Cards (Col 8) -->
+          <div class="md:col-span-8 grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 text-center">
+              <div class="text-[11px] text-slate-400 uppercase font-semibold">Hard Skills</div>
+              <div id="score-hard-skills" class="text-xl font-extrabold text-blue-400 mt-1">--</div>
+            </div>
+            <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 text-center">
+              <div class="text-[11px] text-slate-400 uppercase font-semibold">Soft Skills</div>
+              <div id="score-soft-skills" class="text-xl font-extrabold text-emerald-400 mt-1">--</div>
+            </div>
+            <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 text-center">
+              <div class="text-[11px] text-slate-400 uppercase font-semibold">Experience</div>
+              <div id="score-exp" class="text-xl font-extrabold text-indigo-400 mt-1">--</div>
+            </div>
+            <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 text-center">
+              <div class="text-[11px] text-slate-400 uppercase font-semibold">Education</div>
+              <div id="score-edu" class="text-xl font-extrabold text-purple-400 mt-1">--</div>
+            </div>
+
+            <!-- Skills Gap Overview Callout (Full row) -->
+            <div class="col-span-2 sm:col-span-4 p-4 rounded-xl bg-blue-950/30 border border-blue-900/40 text-xs text-slate-300 leading-relaxed">
+              <span class="font-bold text-blue-300 block mb-1">Executive Skills Gap Assessment:</span>
+              <span id="ats-gap-text">Assessment details will appear here.</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Keywords Analysis (Matched vs Missing) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          
+          <!-- Matched Keywords -->
+          <div class="p-4 rounded-xl bg-slate-900/70 border border-emerald-900/40 space-y-3">
+            <h4 class="text-xs font-bold text-emerald-400 flex items-center space-x-2 uppercase tracking-wider">
+              <i data-lucide="check-circle" class="w-4 h-4"></i>
+              <span>Matching Target Keywords Found</span>
+            </h4>
+            <div id="matching-keywords-tags" class="flex flex-wrap gap-1.5"></div>
+          </div>
+
+          <!-- Missing Keywords -->
+          <div class="p-4 rounded-xl bg-slate-900/70 border border-rose-900/40 space-y-3">
+            <h4 class="text-xs font-bold text-rose-400 flex items-center space-x-2 uppercase tracking-wider">
+              <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+              <span>Missing High-Impact Keywords</span>
+            </h4>
+            <div id="missing-keywords-tags" class="flex flex-wrap gap-1.5"></div>
+          </div>
+
+        </div>
+
+        <!-- Bullet Point Rewrites (Google XYZ Formula) -->
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <h4 class="text-sm font-bold text-slate-100 flex items-center space-x-2">
+              <i data-lucide="wand-2" class="w-4 h-4 text-purple-400"></i>
+              <span>Google XYZ Formula Bullet Rewrites</span>
+            </h4>
+            <span class="text-xs text-slate-400">Accomplished [X], measured by [Y], by doing [Z]</span>
+          </div>
+
+          <div id="bullet-rewrites-container" class="space-y-3"></div>
+        </div>
+
+        <!-- Actionable Quick Wins Checklist -->
+        <div class="p-4 rounded-xl bg-slate-900/70 border border-slate-800 space-y-2">
+          <h4 class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center space-x-2">
+            <i data-lucide="list-checks" class="w-4 h-4"></i>
+            <span>Actionable Quick Wins Before Submitting</span>
+          </h4>
+          <ul id="quick-wins-list" class="space-y-1.5 text-xs text-slate-300"></ul>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ================================================================= -->
+    <!-- TAB 3: COLD EMAIL STUDIO -->
+    <!-- ================================================================= -->
+    <div id="tab-email" class="tab-content hidden space-y-6">
+      
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Outreach Configuration Form (Col 4) -->
+        <div class="lg:col-span-4 glass-panel p-5 rounded-2xl space-y-4">
+          <h2 class="text-base font-bold text-slate-100 flex items-center space-x-2">
+            <i data-lucide="send" class="w-5 h-5 text-purple-400"></i>
+            <span>Outreach Details</span>
+          </h2>
+          <p class="text-xs text-slate-400">
+            Generate high-converting recruiter cold emails tailored to the role and candidate strengths.
+          </p>
+
+          <div>
+            <label class="text-xs font-semibold text-slate-300 block mb-1">Recruiter / Manager Name</label>
+            <input type="text" id="email-recruiter-name" value="Sarah Jenkins" placeholder="e.g. Alex Smith or Hiring Manager" class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-slate-100 focus:outline-none focus:border-blue-500" />
+          </div>
+
+          <div>
+            <label class="text-xs font-semibold text-slate-300 block mb-1">Target Company</label>
+            <input type="text" id="email-company-name" value="CloudScale Technologies" placeholder="e.g. Google Cloud, Stripe, Acme" class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-slate-100 focus:outline-none focus:border-blue-500" />
+          </div>
+
+          <div>
+            <label class="text-xs font-semibold text-slate-300 block mb-1">Email Tone</label>
+            <select id="email-tone" class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-slate-100 focus:outline-none focus:border-blue-500">
+              <option value="Professional & Confident">Professional & Confident (Recommended)</option>
+              <option value="Direct & Metric-driven">Direct & Metric-driven (Engineering Lead)</option>
+              <option value="Enthusiastic & Innovative">Enthusiastic & Innovative (Early-Stage Startup)</option>
+              <option value="Executive & Strategic">Executive & Strategic (Director/VP level)</option>
+            </select>
+          </div>
+
+          <button 
+            onclick="generateColdEmailPackage()" 
+            id="btn-gen-email"
+            class="w-full py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-sm flex items-center justify-center space-x-2 shadow-lg shadow-purple-600/30 transition"
+          >
+            <i data-lucide="sparkles" class="w-4 h-4"></i>
+            <span>Generate Cold Email Package</span>
+          </button>
+        </div>
+
+        <!-- Generated Cold Email Package (Col 8) -->
+        <div class="lg:col-span-8 glass-panel p-6 rounded-2xl flex flex-col space-y-6">
+          
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div>
+              <h3 class="text-sm font-bold text-slate-100">Cold Email & LinkedIn Outreach Suite</h3>
+              <p class="text-xs text-slate-400">Personalized using Google Gemini reasoning</p>
+            </div>
+
+            <div class="flex items-center space-x-2">
+              <button onclick="copyEmailToClipboard()" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center space-x-1.5 transition">
+                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                <span id="copy-btn-text">Copy Email</span>
+              </button>
+
+              <button onclick="launchEmailClient()" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-blue-600 hover:bg-blue-500 text-white flex items-center space-x-1.5 shadow transition">
+                <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                <span>Open in Mail</span>
+              </button>
+
+              <button onclick="saveEmailToFirestore()" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-amber-600 hover:bg-amber-500 text-white flex items-center space-x-1.5 shadow transition">
+                <i data-lucide="save" class="w-3.5 h-3.5"></i>
+                <span>Save to Firestore</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Subject Line Options -->
+          <div class="space-y-2">
+            <label class="text-xs font-semibold text-slate-300">Selected Subject Line:</label>
+            <div id="subject-lines-list" class="space-y-2">
+              <div class="p-2.5 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-400">
+                Click "Generate Cold Email Package" to view AI-crafted subject lines.
+              </div>
+            </div>
+          </div>
+
+          <!-- Email Body -->
+          <div class="space-y-2 flex-1 flex flex-col">
+            <label class="text-xs font-semibold text-slate-300">Email Body (Editable):</label>
+            <textarea 
+              id="email-body-text" 
+              rows="10" 
+              class="w-full flex-1 bg-slate-950 border border-slate-800 focus:border-purple-500 rounded-xl p-4 text-xs sm:text-sm text-slate-200 font-sans leading-relaxed focus:outline-none"
+              placeholder="Your personalized cold email will appear here..."
+            ></textarea>
+          </div>
+
+          <!-- LinkedIn Note & Follow-up Row -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+            
+            <div class="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-blue-400 flex items-center space-x-1.5">
+                  <i data-lucide="linkedin" class="w-3.5 h-3.5"></i>
+                  <span>LinkedIn Connection Note (&lt;300 chars)</span>
+                </span>
+                <button onclick="copyLinkedInNote()" class="text-[11px] text-slate-400 hover:text-slate-200">Copy</button>
+              </div>
+              <p id="linkedin-note-text" class="text-xs text-slate-300 italic bg-slate-950 p-2.5 rounded-lg border border-slate-800">
+                Waiting for generation...
+              </p>
+            </div>
+
+            <div class="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-emerald-400 flex items-center space-x-1.5">
+                  <i data-lucide="clock-4" class="w-3.5 h-3.5"></i>
+                  <span>4-Day Follow-Up Message</span>
+                </span>
+                <button onclick="copyFollowUpEmail()" class="text-[11px] text-slate-400 hover:text-slate-200">Copy</button>
+              </div>
+              <p id="follow-up-email-text" class="text-xs text-slate-300 italic bg-slate-950 p-2.5 rounded-lg border border-slate-800 max-h-24 overflow-y-auto">
+                Waiting for generation...
+              </p>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ================================================================= -->
+    <!-- TAB 4: FIRESTORE CLOUD VAULT -->
+    <!-- ================================================================= -->
+    <div id="tab-vault" class="tab-content hidden space-y-6">
+      
+      <!-- Header -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 glass-panel p-5 rounded-2xl">
+        <div>
+          <h2 class="text-base font-bold text-slate-100 flex items-center space-x-2">
+            <i data-lucide="database" class="w-5 h-5 text-amber-400"></i>
+            <span>Google Cloud Firestore Data Vault</span>
+          </h2>
+          <p class="text-xs text-slate-400">
+            Real-time persistence for document metadata, ATS evaluations, and cold outreach drafts.
+          </p>
+        </div>
+        
+        <button onclick="refreshVaultData()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center space-x-2 transition border border-slate-700">
+          <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+          <span>Sync Vault</span>
+        </button>
+      </div>
+
+      <!-- Vault Content Grids -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Documents Card -->
+        <div class="glass-panel p-5 rounded-2xl space-y-4">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-blue-400 flex items-center space-x-2">
+            <i data-lucide="files" class="w-4 h-4"></i>
+            <span>Saved Documents</span>
+          </h3>
+          <div id="vault-docs-list" class="space-y-2.5 max-h-96 overflow-y-auto pr-1">
+            <div class="text-xs text-slate-500 italic p-3">No documents in vault yet.</div>
+          </div>
+        </div>
+
+        <!-- ATS Audits Card -->
+        <div class="glass-panel p-5 rounded-2xl space-y-4">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center space-x-2">
+            <i data-lucide="activity" class="w-4 h-4"></i>
+            <span>Saved ATS Audits</span>
+          </h3>
+          <div id="vault-audits-list" class="space-y-2.5 max-h-96 overflow-y-auto pr-1">
+            <div class="text-xs text-slate-500 italic p-3">No ATS audits evaluated yet.</div>
+          </div>
+        </div>
+
+        <!-- Cold Emails Card -->
+        <div class="glass-panel p-5 rounded-2xl space-y-4">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-purple-400 flex items-center space-x-2">
+            <i data-lucide="mail-check" class="w-4 h-4"></i>
+            <span>Saved Cold Emails</span>
+          </h3>
+          <div id="vault-emails-list" class="space-y-2.5 max-h-96 overflow-y-auto pr-1">
+            <div class="text-xs text-slate-500 italic p-3">No outreach emails saved yet.</div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-slate-800/80 bg-slate-950 py-6 text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center space-x-2">
+        <span class="font-bold text-slate-400">JobMentor AI</span>
+        <span>— Built for the Google Cloud Run AI Challenge</span>
+      </div>
+      <div class="flex items-center space-x-4">
+        <span>Google Cloud Run</span>
+        <span>•</span>
+        <span>Google Gemini 2.5</span>
+        <span>•</span>
+        <span>Google Cloud Firestore</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Application Logic -->
+  <script src="/static/js/app.js"></script>
+  <script>
+    // Initialize Lucide icons on load
+    document.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+      checkSystemHealth();
+    });
+  </script>
+</body>
+</html>

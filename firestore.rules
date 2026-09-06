@@ -1,0 +1,47 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Documents collection: stores parsed PDF metadata and text
+    match /documents/{documentId} {
+      // Allow read/write if user is the document owner or for public demo/guest
+      allow read: if isAuthenticated() ? resource.data.user_id == request.auth.uid : true;
+      allow create: if request.resource.data.keys().hasAll(['filename', 'pages', 'created_at'])
+                    && (request.resource.data.user_id == 'guest-user' || isOwner(request.resource.data.user_id));
+      allow update, delete: if isAuthenticated() && resource.data.user_id == request.auth.uid;
+    }
+
+    // Chat Sessions collection: conversation turns and citations
+    match /chat_sessions/{sessionId} {
+      allow read, write: if true; // Demo allows public session interactions; tighten to isOwner in strict auth mode
+    }
+
+    // ATS Audits collection: resume vs JD assessment results
+    match /ats_audits/{auditId} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasAll(['overall_score', 'rating', 'created_at']);
+      allow update, delete: if isAuthenticated() && resource.data.user_id == request.auth.uid;
+    }
+
+    // Saved Emails collection: recruiter cold outreach drafts
+    match /saved_emails/{emailId} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasAll(['recruiter_name', 'company_name', 'subject', 'body', 'created_at']);
+      allow update, delete: if isAuthenticated() && resource.data.user_id == request.auth.uid;
+    }
+
+    // Default deny all other collections
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
